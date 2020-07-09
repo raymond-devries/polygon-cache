@@ -9,6 +9,7 @@ license = "MIT"
 python = "^3.8"
 polygon-api-client = "^0.1.6"
 requests-cache = "^0.5.2"
+pytz = "^2020.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.4.3"

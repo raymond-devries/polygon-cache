@@ -2,6 +2,7 @@ from polygon import RESTClient
 import requests_cache
 import requests
 from datetime import datetime
+import pytz
 
 
 class CachedRESTClient(RESTClient):
@@ -9,18 +10,33 @@ class CachedRESTClient(RESTClient):
         requests_cache.install_cache(cache_location, filter_fn=self._cache_filter)
         super().__init__(auth_key)
 
-    @staticmethod
-    def _cache_filter(resp: requests.Response):
+    def _cache_filter(self, resp: requests.Response):
         parsed_response = resp.json()
-        # if any filter function returns True, cache the result
-        filter_functions = [
-            lambda: datetime.strptime(parsed_response['from'],
-                                     '%Y-%m-%d').date() < datetime.today().date(),
-        ]
 
-        for func in filter_functions:
-            try:
-                return func()
-            except KeyError:
-                pass
+        try:
+            return self._filter_by_from(parsed_response)
+        except (KeyError, ValueError):
+            pass
+
+        try:
+            return self._filter_by_unix_timestamp(parsed_response)
+        except KeyError:
+            pass
+
         return False
+
+    @staticmethod
+    def _filter_by_from(parsed_response):
+        # all polygon api requests that use a
+        # singular historical date use this format
+        return datetime.strptime(parsed_response['from'],
+                                 '%Y-%m-%d').date() < datetime.now(
+            pytz.timezone('EST')).date()
+
+    @staticmethod
+    def _filter_by_unix_timestamp(parsed_response):
+        # aggregate results and historic quotes
+        # that need to be cached use this format
+        return datetime.utcfromtimestamp(
+            parsed_response['results'][-1]['t'] / 1000).date() < datetime.now(
+            pytz.UTC).date()

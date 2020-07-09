@@ -35,3 +35,15 @@ def test_cache_filter_from(date, expected_filter_response,
     data = {'from': date}
     resp, client = fake_json_request_on_2020_01_17(data)
     assert client._cache_filter(resp) is expected_filter_response
+
+
+@pytest.mark.parametrize('unix_ms,expected_filter_response',
+                         [(1579107600000, True),
+                          (1579280400000, False),
+                          (1580403600000, False)])
+@responses.activate
+def test_cache_filter_unix_timestamps(unix_ms, expected_filter_response,
+                                      fake_json_request_on_2020_01_17):
+    data = {'results': [{'t': 'not this one'}, {'t': unix_ms}]}
+    resp, client = fake_json_request_on_2020_01_17(data)
+    assert client._cache_filter(resp) is expected_filter_response
