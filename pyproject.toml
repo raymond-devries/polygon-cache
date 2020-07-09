@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "cached-polygon"
+version = "0.1.0"
+description = "A package that caches polygon API calls and seamlessly calls the API multiple times to get all requested data."
+authors = ["raymond-devries <raymond.l.devries@gmail.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+polygon-api-client = "^0.1.6"
+requests-cache = "^0.5.2"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.4.3"
+pytest-cov = "^2.10.0"
+pytest-freezegun = "^0.4.1"
+responses = "^0.10.15"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
