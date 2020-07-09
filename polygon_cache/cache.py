@@ -15,11 +15,15 @@ class CachedRESTClient(RESTClient):
 
         try:
             return self._filter_by_from(parsed_response)
+        # a key error will be thrown if from is not found in the json response
+        # a value error will be thrown if the value cannot be parsed as a date
+        # this is important because some api calls to polygon return from not as a date
         except (KeyError, ValueError):
             pass
 
         try:
             return self._filter_by_unix_timestamp(parsed_response)
+        # a key error is thrown if a unix timestamp is not found
         except KeyError:
             pass
 
