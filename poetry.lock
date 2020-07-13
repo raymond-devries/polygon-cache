@@ -188,6 +188,20 @@ pytest = ">=3.0.0"
 
 [[package]]
 category = "dev"
+description = "Thin-wrapper around the mock package for easier use with pytest"
+name = "pytest-mock"
+optional = false
+python-versions = ">=3.5"
+version = "3.2.0"
+
+[package.dependencies]
+pytest = ">=2.7"
+
+[package.extras]
+dev = ["pre-commit", "tox", "pytest-asyncio"]
+
+[[package]]
+category = "dev"
 description = "Extensions to the standard Python datetime module"
 name = "python-dateutil"
 optional = false
@@ -298,7 +312,7 @@ python-versions = ">=3.6"
 version = "8.0.2"
 
 [metadata]
-content-hash = "f59057ad4b5f30d8bd21b8c594287513dd4e1c6368926701731f276058063d11"
+content-hash = "a4d9cfe3facb9a7e9d374b346751c499e361e26dcd6312e066248f42e6329c18"
 python-versions = "^3.8"
 
 [metadata.files]
@@ -401,6 +415,10 @@ pytest-cov = [
 pytest-freezegun = [
     {file = "pytest-freezegun-0.4.1.zip", hash = "sha256:060cdf192848e50a4a681a5e73f8b544c4ee5ebc1fab3cb7223a0097bac2f83f"},
     {file = "pytest_freezegun-0.4.1-py2.py3-none-any.whl", hash = "sha256:1c77b2917883b8abf817fc39a1fd3f40ac43711eb923512abe7b6557e55eaaf1"},
+]
+pytest-mock = [
+    {file = "pytest-mock-3.2.0.tar.gz", hash = "sha256:7122d55505d5ed5a6f3df940ad174b3f606ecae5e9bc379569cdcbd4cd9d2b83"},
+    {file = "pytest_mock-3.2.0-py3-none-any.whl", hash = "sha256:5564c7cd2569b603f8451ec77928083054d8896046830ca763ed68f4112d17c7"},
 ]
 python-dateutil = [
     {file = "python-dateutil-2.8.1.tar.gz", hash = "sha256:73ebfe9dbf22e832286dafa60473e4cd239f8592f699aa5adaf10050e6e1823c"},
