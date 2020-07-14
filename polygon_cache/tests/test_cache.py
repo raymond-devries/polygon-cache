@@ -105,16 +105,16 @@ def create_fake_stocks_equities_aggregate_api_response():
     def _create_fake_stocks_equities_aggregate_api_response(ticker: str = 'TIC',
                                                             status: str = 'OK',
                                                             adjusted: bool = True,
-                                                            query_count: int = 100,
-                                                            results_count: int = 50,
+                                                            queryCount: int = 100,
+                                                            resultsCount: int = 50,
                                                             results=
                                                             create_fake_aggv2_results):
         api_response = StocksEquitiesAggregatesApiResponse()
         api_response.ticker = ticker
         api_response.status = status
         api_response.adjusted = adjusted
-        api_response.queryCount = query_count
-        api_response.resultsCount = results_count
+        api_response.queryCount = queryCount
+        api_response.resultsCount = resultsCount
         api_response.results = results()
 
         return api_response

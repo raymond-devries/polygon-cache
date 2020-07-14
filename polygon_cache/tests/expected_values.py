@@ -1,5 +1,5 @@
 AGGREGATES_TEST = {'adjusted': True,
-                   'query_count': 300,
+                   'queryCount': 300,
                    'results': [{'T': 'TIC',
                                 'c': 105,
                                 'h': 110,
@@ -1200,7 +1200,7 @@ AGGREGATES_TEST = {'adjusted': True,
                                 'o': 149,
                                 't': 100490,
                                 'v ': 1049}],
-                   'results_count': 150,
+                   'resultsCount': 150,
                    'status': 'OK',
                    'ticker': 'TIC'}
 
