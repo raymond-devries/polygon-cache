@@ -15,7 +15,7 @@ class CachedRESTClient(RESTClient):
         requests_cache.install_cache(cache_location, filter_fn=self._cache_filter)
         super().__init__(auth_key)
 
-    def _cache_filter(self, resp: requests.Response):
+    def _cache_filter(self, resp: requests.Response) -> bool:
         parsed_response = resp.json()
 
         try:
@@ -35,7 +35,7 @@ class CachedRESTClient(RESTClient):
         return False
 
     @staticmethod
-    def _filter_by_from(parsed_response: dict):
+    def _filter_by_from(parsed_response: dict) -> bool:
         # all polygon api requests that use a
         # singular historical date use this format
         return datetime.strptime(parsed_response['from'],
@@ -43,7 +43,7 @@ class CachedRESTClient(RESTClient):
             pytz.timezone('EST')).date()
 
     @staticmethod
-    def _filter_by_unix_timestamp(parsed_response: dict):
+    def _filter_by_unix_timestamp(parsed_response: dict) -> bool:
         # aggregate results and historic quotes
         # that need to be cached use this format
         return datetime.utcfromtimestamp(
@@ -95,7 +95,8 @@ class CachedRESTClient(RESTClient):
 
     @staticmethod
     def _combine_aggregate_results(
-            api_responses: List[StocksEquitiesAggregatesApiResponse]):
+            api_responses: List[StocksEquitiesAggregatesApiResponse]
+            ) -> StocksEquitiesAggregatesApiResponse:
         first_result = api_responses[0]
         expected_ticker = first_result.ticker
         expected_status = first_result.status
@@ -108,7 +109,7 @@ class CachedRESTClient(RESTClient):
                 raise ValueError(
                     f'Multiple tickers encountered while trying to combine results: '
                     f'{api_response.ticker} and {expected_ticker}')
-            
+
             if api_response.status != expected_status:
                 raise ValueError(
                     f'Multiple statuses encountered while trying to combine results: '
@@ -132,4 +133,3 @@ class CachedRESTClient(RESTClient):
         combined_api_response.results = results_combined
 
         return combined_api_response
-
