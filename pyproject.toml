@@ -6,7 +6,7 @@ authors = ["raymond-devries <raymond.l.devries@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.6"
 polygon-api-client = "^0.1.6"
 requests-cache = "^0.5.2"
 pytz = "^2020.1"
