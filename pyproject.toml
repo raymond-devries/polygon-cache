@@ -1,9 +1,10 @@
 [tool.poetry]
 name = "polygon-cache"
-version = "0.1.0"
+version = "0.1.1"
 description = "A package that caches polygon API calls and seamlessly calls the API multiple times to get all requested data."
 authors = ["raymond-devries <raymond.l.devries@gmail.com>"]
 license = "MIT"
+readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.6"
