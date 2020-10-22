@@ -1,13 +1,12 @@
-from typing import List
-
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
+from typing import List
 
+import pytz
+import requests
+import requests_cache
 from polygon import RESTClient
 from polygon.rest.models import StocksEquitiesAggregatesApiResponse
-import requests_cache
-import requests
-import pytz
 
 
 class CachedRESTClient(RESTClient):
