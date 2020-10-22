@@ -1,17 +1,16 @@
-from typing import List
-
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
+from typing import List
 
+import pytz
+import requests
+import requests_cache
 from polygon import RESTClient
 from polygon.rest.models import StocksEquitiesAggregatesApiResponse
-import requests_cache
-import requests
-import pytz
 
 
 class CachedRESTClient(RESTClient):
-    def __init__(self, auth_key: str, cache_location: str = 'polygon-cache'):
+    def __init__(self, auth_key: str, cache_location: str = "polygon-cache"):
         requests_cache.install_cache(cache_location, filter_fn=self._cache_filter)
         super().__init__(auth_key)
 
@@ -38,46 +37,61 @@ class CachedRESTClient(RESTClient):
     def _filter_by_from(parsed_response: dict) -> bool:
         # all polygon api requests that use a
         # singular historical date use this format
-        return datetime.strptime(parsed_response['from'],
-                                 '%Y-%m-%d').date() < datetime.now(
-            pytz.timezone('EST')).date()
+        return (
+            datetime.strptime(parsed_response["from"], "%Y-%m-%d").date()
+            < datetime.now(pytz.timezone("EST")).date()
+        )
 
     @staticmethod
     def _filter_by_unix_timestamp(parsed_response: dict) -> bool:
         # aggregate results and historic quotes
         # that need to be cached use this format
-        return datetime.utcfromtimestamp(
-            parsed_response['results'][-1]['t'] / 1000).date() < datetime.now(
-            pytz.UTC).date()
+        return (
+            datetime.utcfromtimestamp(parsed_response["results"][-1]["t"] / 1000).date()
+            < datetime.now(pytz.UTC).date()
+        )
 
-    def stocks_equities_aggregates(self, ticker, multiplier, timespan, from_, to,
-                                   max_threads=20, **query_params
-                                   ) -> StocksEquitiesAggregatesApiResponse:
-        start = datetime.strptime(from_, '%Y-%m-%d')
-        end = datetime.strptime(to, '%Y-%m-%d')
-        if timespan == 'minute' or timespan == 'hour':
+    def stocks_equities_aggregates(
+        self, ticker, multiplier, timespan, from_, to, max_threads=20, **query_params
+    ) -> StocksEquitiesAggregatesApiResponse:
+        start = datetime.strptime(from_, "%Y-%m-%d")
+        end = datetime.strptime(to, "%Y-%m-%d")
+        if timespan == "minute" or timespan == "hour":
             max_days_calls = 5
         else:
             max_days_calls = 3000
 
-        dates_api_calls = self._calculate_aggregate_api_calls(start, end,
-                                                              max_days_calls)
+        dates_api_calls = self._calculate_aggregate_api_calls(
+            start, end, max_days_calls
+        )
 
         executor = ThreadPoolExecutor(max_threads)
         api_responses = []
         for dates in dates_api_calls:
-            date1 = dates[0].strftime('%Y-%m-%d')
-            date2 = dates[1].strftime('%Y-%m-%d')
-            api_responses.append(executor.submit(
-                super().stocks_equities_aggregates, ticker, multiplier, timespan,
-                date1, date2))
+            date1 = dates[0].strftime("%Y-%m-%d")
+            date2 = dates[1].strftime("%Y-%m-%d")
+            api_responses.append(
+                executor.submit(
+                    super().stocks_equities_aggregates,
+                    ticker,
+                    multiplier,
+                    timespan,
+                    date1,
+                    date2,
+                )
+            )
 
         api_responses = [result.result() for result in api_responses]
-        return self._combine_aggregate_results(api_responses)
+        return self._combine_aggregate_results(api_responses,
+                                               ("ticker", "status", "adjusted"),
+                                               ("queryCount", "resultsCount"),
+                                               ("results",),
+                                               StocksEquitiesAggregatesApiResponse)
 
     @staticmethod
-    def _calculate_aggregate_api_calls(start: datetime, end: datetime,
-                                       days: int) -> List[tuple]:
+    def _calculate_aggregate_api_calls(
+        start: datetime, end: datetime, days: int
+    ) -> List[tuple]:
         current_day = start
         period = timedelta(days=days)
         dates = []
@@ -95,41 +109,33 @@ class CachedRESTClient(RESTClient):
 
     @staticmethod
     def _combine_aggregate_results(
-            api_responses: List[StocksEquitiesAggregatesApiResponse]
-            ) -> StocksEquitiesAggregatesApiResponse:
-        first_result = api_responses[0]
-        expected_ticker = first_result.ticker
-        expected_status = first_result.status
-        expected_adjusted = first_result.adjusted
-        query_count_combined = 0
-        results_count_combined = 0
-        results_combined = []
+        api_responses: list,
+        constant_attrs,
+        summed_attrs,
+        combined_attrs,
+        response_class,
+    ):
+        combined_results = {}
+        [combined_results.update({attr: getattr(api_responses[0], attr)})
+         for attr in constant_attrs]
+        [combined_results.update({attr: 0}) for attr in summed_attrs]
+        [combined_results.update({attr: []}) for attr in combined_attrs]
+
         for api_response in api_responses:
-            if api_response.ticker != expected_ticker:
-                raise ValueError(
-                    f'Multiple tickers encountered while trying to combine results: '
-                    f'{api_response.ticker} and {expected_ticker}')
+            for attr in constant_attrs:
+                if getattr(api_response, attr) != (
+                    constant_attr := getattr(api_responses[0], attr)
+                ):
+                    raise ValueError(
+                        f"Multiple {attr} encountered while trying to combine results: "
+                        f"{getattr(api_response, attr)} and {constant_attr}"
+                    )
 
-            if api_response.status != expected_status:
-                raise ValueError(
-                    f'Multiple statuses encountered while trying to combine results: '
-                    f'{api_response.status} and {expected_status}')
+            for attr in summed_attrs + combined_attrs:
+                combined_results[attr] += getattr(api_response, attr)
 
-            if api_response.adjusted != expected_adjusted:
-                raise ValueError(
-                    f'Multiple adjusted values encountered while trying to '
-                    f'combine results: {api_response.adjusted} and {expected_adjusted}')
-
-            query_count_combined += api_response.queryCount
-            results_count_combined += api_response.resultsCount
-            results_combined += api_response.results
-
-        combined_api_response = StocksEquitiesAggregatesApiResponse()
-        combined_api_response.ticker = expected_ticker
-        combined_api_response.status = expected_status
-        combined_api_response.adjusted = expected_adjusted
-        combined_api_response.queryCount = query_count_combined
-        combined_api_response.resultsCount = results_count_combined
-        combined_api_response.results = results_combined
+        combined_api_response = response_class()
+        for attr, value in combined_results.items():
+            setattr(combined_api_response, attr, value)
 
         return combined_api_response
