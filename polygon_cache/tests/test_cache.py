@@ -119,16 +119,6 @@ def create_fake_aggv2_results(
 
 
 @pytest.fixture
-def empty_class():
-    class EmptyClass:
-        def __init__(self, **kwargs):
-            for key, value in kwargs.items():
-                setattr(self, key, value)
-
-    return EmptyClass
-
-
-@pytest.fixture
 def create_fake_stocks_equities_aggregate_api_response():
     def _create_fake_stocks_equities_aggregate_api_response(
         ticker: str = "TIC",
@@ -164,7 +154,29 @@ def test_aggregate_call(
     assert combined_results.__dict__ == expected_values.AGGREGATES_TEST
 
 
-def test_value_error_multiple_tickers_combine_aggregate_results(
+@pytest.fixture
+def empty_class():
+    class EmptyClass:
+        def __init__(self, **kwargs):
+            for key, value in kwargs.items():
+                setattr(self, key, value)
+
+    return EmptyClass
+
+
+def test_const_attr_combine(create_client, empty_class):
+    client = create_client
+    combined = client._combine_aggregate_results(
+        [empty_class(status=True), empty_class(status=True)],
+        ["status"],
+        [],
+        [],
+        empty_class,
+    )
+    assert combined.status is True
+
+
+def test_value_error_multiple_constant_attrs_combine_aggregate_results(
     create_client, empty_class
 ):
     client = create_client

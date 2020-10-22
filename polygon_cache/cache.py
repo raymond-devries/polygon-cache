@@ -82,7 +82,11 @@ class CachedRESTClient(RESTClient):
             )
 
         api_responses = [result.result() for result in api_responses]
-        return self._combine_aggregate_results(api_responses)
+        return self._combine_aggregate_results(api_responses,
+                                               ("ticker", "status", "adjusted"),
+                                               ("queryCount", "resultsCount"),
+                                               ("results",),
+                                               StocksEquitiesAggregatesApiResponse)
 
     @staticmethod
     def _calculate_aggregate_api_calls(
@@ -112,9 +116,11 @@ class CachedRESTClient(RESTClient):
         response_class,
     ):
         combined_results = {}
-        [combined_results.update({attr: None}) for attr in constant_attrs]
+        [combined_results.update({attr: getattr(api_responses[0], attr)})
+         for attr in constant_attrs]
         [combined_results.update({attr: 0}) for attr in summed_attrs]
         [combined_results.update({attr: []}) for attr in combined_attrs]
+
         for api_response in api_responses:
             for attr in constant_attrs:
                 if getattr(api_response, attr) != (
