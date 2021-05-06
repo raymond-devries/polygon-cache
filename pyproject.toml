@@ -2,7 +2,7 @@
 name = "polygon-cache"
 version = "0.1.2"
 description = "A package that caches polygon API calls and seamlessly calls the API multiple times to get all requested data."
-authors = ["raymond-devries"]
+authors = ["Raymond DeVries"]
 license = "MIT"
 readme = "README.md"
 
